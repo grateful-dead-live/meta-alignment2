@@ -191,5 +191,12 @@ def construct_timeline_forreal(matches):
     plot_timelines(limits, names, 'timelines5.pdf')
     #print([[p[0][0][0] for p in ps] for ps in gapless])
     #[[add_track_to_timeline(p) for p in ps] for ps in gapless]
+    
+    outfile = {}
+    for i, n in enumerate(names):
+        outfile[n] = limits[i]
+    
+    with open('segments.json', 'w') as f:
+        json.dump(outfile, f)
 
 construct_timeline_forreal(matches)

@@ -1,2 +1,4 @@
 *.pdf
 data/
+
+segments.json
