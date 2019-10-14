@@ -162,6 +162,7 @@ def construct_timeline_forreal(matches):
     partitions = [[partition_match(m) for m in ms] for ms in matches]
     
     lengths = [[m['length'] for m in ms] for ms in matches]
+    tunings = [[m['tuning'] if 'tuning' in m else 0 for m in ms] for ms in matches]
     gapless = [fill_gaps(partitions[i], lengths[i]) for i in range(len(matches))]
     
     limits = [[partlimits(p) for p in ps] for ps in gapless]
@@ -192,11 +193,17 @@ def construct_timeline_forreal(matches):
     #print([[p[0][0][0] for p in ps] for ps in gapless])
     #[[add_track_to_timeline(p) for p in ps] for ps in gapless]
     
+    #first non-ref tuning is often 0... thomas?
+    tunings = [1]+[t[1] for t in tunings]
+    print(tunings)
+    
     outfile = {}
     for i, n in enumerate(names):
-        outfile[n] = limits[i]
+        outfile[n] = {}
+        outfile[n]['segments'] = limits[i]
+        outfile[n]['tuning_ratio'] = 2**(tunings[i]/1200)
     
-    with open('segments.json', 'w') as f:
+    with open('output.json', 'w') as f:
         json.dump(outfile, f)
 
 construct_timeline_forreal(matches)

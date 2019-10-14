@@ -1,4 +1,4 @@
 *.pdf
 data/
 
-segments.json
+output.json
