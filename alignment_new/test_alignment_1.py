@@ -79,10 +79,12 @@ def sort_subgraphs(subs, ids_by_length, lengths):
         file_list.append([i+'_'+t[0] for t in lengths[i]])
 
     ssubs = deepcopy(subs)
+    change_idx = []
+
+    # TODO: this needs to be recursive
     for i, s in enumerate(subs[1:]):
         if getkeyid(s) != getkeyid(subs[i]):
             found_idx = None
-            temp_s = s
             flat_s = flatsub(s)
             for f in flat_s:
                 prv_file = None
@@ -99,7 +101,7 @@ def sort_subgraphs(subs, ids_by_length, lengths):
                             if prv_file:
                                 if prv_file in flat_j:
                                     try:
-                                        found_idx = subs.index(j)
+                                        found_idx = subs.index(j) + 1
                                         print('prev', found_idx)
                                     except: pass
                             if nxt_file and not found_idx:
@@ -111,11 +113,14 @@ def sort_subgraphs(subs, ids_by_length, lengths):
                             if found_idx:
                                 break   
                 if found_idx:
-                    res = found_idx
+                    change_idx.append((found_idx, i))
                     break
+                    
             if not found_idx:
                 print('no index found for subgraph')
-               
+    if change_idx:
+        change_idx.sort()
+        print(change_idx)
                     
 def main():
     subgraphs, ids_by_length, ids_by_number_of_matched_files, lengths, jsons = prepare_data(DATE)
