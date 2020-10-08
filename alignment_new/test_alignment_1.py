@@ -99,7 +99,7 @@ def sort_subgraphs(subs, lengths, ids_by_length):
     ordered = sorted_subs_all[0]
     for rec in sorted_subs_all:
         for i, n in enumerate(rec):
-            #if True:#n not in ordered:
+            #if True:
             if n not in ordered:
                 prevs = [m for m in sorted_subs_all[1][:i]]
                 prevs.reverse()
@@ -125,7 +125,7 @@ def sort_subgraphs(subs, lengths, ids_by_length):
                     ordered.insert(pos, n)
                 else:
                     print('cannot reorder item', rec, n)
-    subs = list(dict.fromkeys(subs))
+    #subs = list(dict.fromkeys(subs))
     res = [subs[i] for i in ordered]
 
     return res

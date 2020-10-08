@@ -43,8 +43,6 @@ def loadJson(date):
         print(d)
         j = None
         for f in [i for i in os.listdir(os.path.join(folder, d)) if i.endswith('.json') and not i.endswith('full.json') and not i.startswith('unmatched')]:
-            #print(f)
-            print(f)
             jsons[d+'__'+f[:-5]] = json.load(open(os.path.join(folder, d, f))) 
     jsons['unmatched'] = json.load(open(os.path.join(folder, 'unmatched.json')))['unmatched']
     return jsons
