@@ -4,9 +4,9 @@ import numpy as np
 from pprint import pprint
 from copy import copy, deepcopy
 from itertools import combinations
-import json
+import json, sys
 
-DATE = '90-03-14'
+DATE = '90-07-21'
 MIN_R = 0.9999
 
 split = lambda l, locs: [l[i:j] for i, j in zip([0]+locs, locs+[None])]
@@ -67,75 +67,78 @@ def multi_index(item, arr):
     return (arr.index(a), a.index(item))
 
 
-def sort_subgraphs(subs, ids_by_length, lengths):
-    getkeyid = lambda l: list(l.keys())[0].split('_')[0]
-    flatsub = lambda l: list(set([list(l.keys())[0]] + [x for sublist in list(l.values())[0] for x in sublist]))
+def move_item(arr, item, new_index):
+    try:
+        arr.remove(item)
+        arr.insert(new_index, item)
+    except ValueError:
+        print(f'Moving item to {new_index} failed')
+    return arr
 
-    # sort subgraphs by lengths of recording
-    subs = sorted(subs, key=lambda l: ids_by_length.index(getkeyid(l)))
 
+def sort_subgraphs(subs, lengths, ids_by_length):
+    # file_lists sorted by list length
     file_list = []
     for i in ids_by_length:
         file_list.append([i+'_'+t[0] for t in lengths[i]])
-
-    ssubs = deepcopy(subs)
-    change_idx = []
-
-    # TODO: this needs to be recursive
-    for i, s in enumerate(subs[1:]):
-        if getkeyid(s) != getkeyid(subs[i]):
-            found_idx = None
-            flat_s = flatsub(s)
-            for f in flat_s:
-                prv_file = None
-                nxt_file = None
-                idx = multi_index(f, file_list)
-                if idx[1] > 0:
-                    prv_file = file_list[idx[0]][idx[1]-1]
-                if idx[1] < len(file_list[idx[0]])-1:
-                    nxt_file = file_list[idx[0]][idx[1]+1]
-                for j in subs:
-                    if j != s:
-                        flat_j = flatsub(j)
-                        for fs in flat_s:
-                            if prv_file:
-                                if prv_file in flat_j:
-                                    try:
-                                        found_idx = subs.index(j) + 1
-                                        print('prev', found_idx)
-                                    except: pass
-                            if nxt_file and not found_idx:
-                                if nxt_file in flat_j:
-                                    try:
-                                        found_idx = subs.index(j)
-                                        print('next', found_idx)
-                                    except: pass
-                            if found_idx:
-                                break   
-                if found_idx:
-                    change_idx.append((found_idx, i))
+    file_list = sorted(file_list, key=len, reverse=True)
+    
+    flatsub = lambda l: list(set([list(l.keys())[0]] + [x for sublist in list(l.values())[0] for x in sublist]))
+    sorted_subs_all = []
+    for i, rec in enumerate(file_list):
+        sorted_subs = []
+        for track in rec:
+            for j, s in enumerate(subs):
+                sflat = flatsub(s)
+                if track in sflat:
+                    found = True
+                    sorted_subs.append(j)
                     break
-                    
-            if not found_idx:
-                print('no index found for subgraph')
-    if change_idx:
-        change_idx.sort()
-        print(change_idx)
-                    
+        sorted_subs_all.append(list(dict.fromkeys(sorted_subs)))
+
+    ordered = sorted_subs_all[0]
+    for rec in sorted_subs_all:
+        for i, n in enumerate(rec):
+            #if True:#n not in ordered:
+            if n not in ordered:
+                prevs = [m for m in sorted_subs_all[1][:i]]
+                prevs.reverse()
+                nexts = [m for m in sorted_subs_all[1][i+1:]]
+                #nexts.pop(0)
+                pos = None
+                for p in range(max([len(prevs), len(nexts)])):
+                    if p < len(prevs)-1:
+                        try:
+                            pos = ordered.index(prevs[p]) + 1
+                        except:
+                            pass
+                        if pos:
+                            break
+                    if p < len(nexts)-1:
+                        try:
+                            pos = ordered.index(nexts[p])
+                        except:
+                            pass
+                        if pos:
+                            break
+                if pos:
+                    ordered.insert(pos, n)
+                else:
+                    print('cannot reorder item', rec, n)
+    subs = list(dict.fromkeys(subs))
+    res = [subs[i] for i in ordered]
+
+    return res
+
+
+
+
 def main():
     subgraphs, ids_by_length, ids_by_number_of_matched_files, lengths, jsons = prepare_data(DATE)
-    #pprint(subgraphs)
-    sort_subgraphs(subgraphs, ids_by_length, lengths)
-
-    #file_lists = get_file_lists(ids_by_length, lengths)
-    #pprint(lengths)
-    unmatched = jsons['unmatched']
-    #print(unmatched)
-    ref_id = ids_by_length[0]
-    #comb = list(combinations(ids_by_length, 2))
-    
-    #first
-    jkeys = list(jsons.keys())
+    subgraphs = sort_subgraphs(subgraphs, lengths, ids_by_length)
+    pprint(subgraphs)
+    #unmatched = jsons['unmatched']
+    #jkeys = list(jsons.keys())
     #partitions = [partition_match(jsons, k) for k in jkeys if k != 'unmatched']
 
     #[print(c, len(p)) for c, p in zip(comb, partitions)]

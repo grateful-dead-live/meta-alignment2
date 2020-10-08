@@ -8,8 +8,8 @@ from pprint import pprint
 
 
 #DATE = '90-03-14'
-#FOLDER = '/Volumes/gspeed1/thomasw/grateful_dead/2020/GD-DTW/results_15s_linregress/'#90-03-14/'  #116030_116746'
-FOLDER = './'
+FOLDER = '/Volumes/gspeed1/thomasw/grateful_dead/2020/GD-DTW/results_15s_linregress/'#90-03-14/'  #116030_116746'
+#FOLDER = './'
 
 
 def etreeNumber(e):
@@ -31,7 +31,7 @@ def getDirsDict():
     dirDict = {}
     for d in dirs:
         dirDict[etreeNumber(d.split('/')[-1])] = d
-    #json.dump(dirDict, open('dirdict.json', 'w'))
+    json.dump(dirDict, open('dirdict.json', 'w'))
     return dirDict
 
 
@@ -40,9 +40,11 @@ def loadJson(date):
     jsons = {}
     folder = os.path.join(FOLDER, date)
     for d in [f for f in os.listdir(folder) if os.path.isdir(os.path.join(folder, f))]:
+        print(d)
         j = None
         for f in [i for i in os.listdir(os.path.join(folder, d)) if i.endswith('.json') and not i.endswith('full.json') and not i.startswith('unmatched')]:
             #print(f)
+            print(f)
             jsons[d+'__'+f[:-5]] = json.load(open(os.path.join(folder, d, f))) 
     jsons['unmatched'] = json.load(open(os.path.join(folder, 'unmatched.json')))['unmatched']
     return jsons
@@ -76,6 +78,7 @@ def find_connected(g, node):
     cn = list(g.in_edges(node))
     cn = find_connected_r(g, cn, cn)
     cn = chain_connected(cn)
+    cn = [list(n[:-1]) for n in cn]
     return cn
 
 # get connected graphs of individual tracks
@@ -145,6 +148,7 @@ def prepare_data(date):
     ids_by_number_of_matched_files = rank_ids_amount(subs)
     dirsdict = getDirsDict()
     jsons = loadJson(date)
+    #json.dump(jsons, open('jsons.json', 'w'))
     #jsons = json.load(open('jsons.json'))
     lengths = {}
     for i in get_all_ids(g):
@@ -154,7 +158,7 @@ def prepare_data(date):
     # add unmatched to subgraph:
     for n in nx.isolates(g):
         subs.append({n:[]})    
-
+    
     return subs, ids_by_length, ids_by_number_of_matched_files, lengths, jsons
 
 def track_tuple_to_json_id(n):
@@ -163,9 +167,6 @@ def track_tuple_to_json_id(n):
     id2 = n[1].split('_')[0]
     fn2 = ('_').join(n[1].split('_')[1:])     
     return id1+'_'+id2+'__'+fn1+'__'+fn2
-
-
-
 
 
 def main():
