@@ -6,7 +6,7 @@ from copy import copy, deepcopy
 from itertools import combinations
 import json, sys
 
-DATE = '90-07-21'
+DATE = '90-07-19'
 MIN_R = 0.9999
 
 split = lambda l, locs: [l[i:j] for i, j in zip([0]+locs, locs+[None])]
@@ -81,7 +81,6 @@ def sort_subgraphs(subs, lengths, ids_by_length):
     file_list = []
     for i in ids_by_length:
         file_list.append([i+'_'+t[0] for t in lengths[i]])
-    file_list = sorted(file_list, key=len, reverse=True)
     
     flatsub = lambda l: list(set([list(l.keys())[0]] + [x for sublist in list(l.values())[0] for x in sublist]))
     sorted_subs_all = []
@@ -95,48 +94,47 @@ def sort_subgraphs(subs, lengths, ids_by_length):
                     sorted_subs.append(j)
                     break
         sorted_subs_all.append(list(dict.fromkeys(sorted_subs)))
+    sorted_subs_all = sorted(sorted_subs_all, key=len)#, reverse=True)
 
     ordered = sorted_subs_all[0]
-    for rec in sorted_subs_all:
+    #print('srt', ordered)
+    #print()
+    for rec in sorted_subs_all[1:]:
+        #print('rec', rec)
         for i, n in enumerate(rec):
-            #if True:
             if n not in ordered:
-                prevs = [m for m in sorted_subs_all[1][:i]]
+                prevs = [m for m in rec[:i]]
                 prevs.reverse()
-                nexts = [m for m in sorted_subs_all[1][i+1:]]
-                #nexts.pop(0)
+                nexts = [m for m in rec[i+1:]]
                 pos = None
                 for p in range(max([len(prevs), len(nexts)])):
                     if p < len(prevs)-1:
                         try:
                             pos = ordered.index(prevs[p]) + 1
+                            break
                         except:
                             pass
-                        if pos:
-                            break
                     if p < len(nexts)-1:
                         try:
                             pos = ordered.index(nexts[p])
+                            break
                         except:
                             pass
-                        if pos:
-                            break
-                if pos:
+                if pos != None:
                     ordered.insert(pos, n)
                 else:
-                    print('cannot reorder item', rec, n)
-    #subs = list(dict.fromkeys(subs))
+                    pass#print('cannot reorder item', rec, n)
+        #print('srt', ordered)
+        #print()
+    print(ordered)
     res = [subs[i] for i in ordered]
-
+    #json.dump(res, open('res.json', 'w'))
     return res
-
-
-
 
 def main():
     subgraphs, ids_by_length, ids_by_number_of_matched_files, lengths, jsons = prepare_data(DATE)
     subgraphs = sort_subgraphs(subgraphs, lengths, ids_by_length)
-    pprint(subgraphs)
+    #pprint(subgraphs)
     #unmatched = jsons['unmatched']
     #jkeys = list(jsons.keys())
     #partitions = [partition_match(jsons, k) for k in jkeys if k != 'unmatched']
